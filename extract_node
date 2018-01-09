@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# 7f454c46
+ELFMAGIC=$'\177ELF'
+ignore=(
+  -e '/$'
+  -e 'LICENSE$'
+  -e '.js$'
+  -e '.json$'
+  -e '.c$'
+  -e '.cc$'
+  -e '.cpp$'
+  -e '.h$'
+  -e '.md$'
+  -e '.mk$'
+  -e '.o$'
+  -e '.txt$'
+  -e '.yml$'
+)
+
+dest="$1"
+src="$2"
+shift 2
+
+opts=( -x "$src" )
+for d in "$@"; do
+  opts+=( -e "$d" )
+done
+
+extract="${0%/*}/extract"
+
+find "$src" -type f | grep -v "${ignore[@]}" | while read f ; do
+  hex=$(head -c 4 "$f")
+  if [[ $hex == $ELFMAGIC ]]; then
+    "$extract" "${opts[@]}" "$dest" "$f"
+  fi
+done
+
+rm -rf "$dest/etc/ld.so.conf" "$dest/etc/ld.so.conf.d"
